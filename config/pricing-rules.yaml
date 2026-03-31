@@ -1,0 +1,23 @@
+# Pricing guardrails applied to all recommendations
+rules:
+  # Price floor: never go below this multiplier of face value
+  floor_price_multiplier: 0.70   # 70% of face value minimum
+
+  # Price ceiling: never exceed this multiplier of face value
+  ceiling_price_multiplier: 3.00  # 3x face value maximum
+
+  # Max price change per monitoring interval (%)
+  max_increase_pct: 15.0
+  max_decrease_pct: 10.0
+
+  # Flash sale trigger: apply emergency discount when:
+  flash_sale:
+    unsold_threshold_pct: 40.0    # > 40% of inventory still unsold
+    hours_to_event_threshold: 6   # AND < 6 hours until event
+    discount_pct: 25.0             # Drop price by 25%
+
+  # Minimum confidence level to apply price changes
+  min_confidence: medium           # only apply if elasticity confidence >= medium
+
+  # Competitor benchmark tolerance
+  competitor_deviation_max_pct: 20.0  # stay within 20% of competitor median

@@ -1,0 +1,32 @@
+# Seasonality adjustments for elasticity modeling
+# Multipliers applied to base elasticity coefficients
+adjustments:
+  day_of_week:
+    friday: 1.15     # Higher willingness to pay on Fridays
+    saturday: 1.20
+    sunday: 1.10
+    monday: 0.90
+    tuesday: 0.85
+    wednesday: 0.90
+    thursday: 1.05
+
+  month:
+    january: 0.85
+    february: 0.90
+    march: 0.95
+    april: 1.10
+    may: 1.15
+    june: 1.20
+    july: 1.20
+    august: 1.15
+    september: 1.10
+    october: 1.10
+    november: 1.00
+    december: 1.05
+
+  event_type:
+    concert: 1.0
+    sport: 0.95
+    theater: 1.05
+    comedy: 0.90
+    festival: 1.10

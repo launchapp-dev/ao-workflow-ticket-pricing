@@ -1,0 +1,50 @@
+default_workflow_ref: price-monitor
+
+workflows:
+  - id: price-monitor
+    name: "Hourly Ticket Price Monitor"
+    description: "Monitors real-time ticket demand, scrapes competitor prices, runs elasticity-based optimization, simulates revenue impact, and applies price adjustments. Runs hourly during active sale periods."
+    phases:
+      - collect-sales-data
+      - analyze-demand:
+          on_verdict:
+            sold-out:
+              target: generate-pricing-report
+            cold:
+              target: scrape-competitor-prices
+            warming:
+              target: scrape-competitor-prices
+            hot:
+              target: model-elasticity
+          max_rework_attempts: 2
+      - scrape-competitor-prices
+      - model-elasticity
+      - optimize-prices:
+          on_verdict:
+            hold:
+              target: generate-pricing-report
+            increase:
+              target: simulate-revenue
+            decrease:
+              target: simulate-revenue
+            flash-sale:
+              target: simulate-revenue
+          max_rework_attempts: 2
+      - simulate-revenue
+      - apply-price-changes
+      - generate-pricing-report
+
+  - id: daily-market-scan
+    name: "Daily Market Scan"
+    description: "Full competitor price scan and daily pricing activity summary. Runs once daily to capture market trends."
+    phases:
+      - collect-daily-market
+      - scrape-competitor-prices
+      - generate-daily-report
+
+  - id: weekly-revenue-review
+    name: "Weekly Revenue Review"
+    description: "Aggregates weekly pricing performance, computes revenue vs. projections, analyzes pricing effectiveness, and generates strategic recommendations."
+    phases:
+      - aggregate-weekly-data
+      - generate-weekly-review

@@ -1,0 +1,49 @@
+{
+  "_comment": "Historical price/sell-through data for elasticity modeling — 90 days of records",
+  "records": [
+    {
+      "event_id": "EVT-HIST-001",
+      "section": "floor",
+      "event_type": "concert",
+      "days_before_event": 30,
+      "price": 100.00,
+      "capacity": 500,
+      "sold": 420,
+      "sell_through_pct": 84.0,
+      "date": "2026-01-15"
+    },
+    {
+      "event_id": "EVT-HIST-001",
+      "section": "floor",
+      "event_type": "concert",
+      "days_before_event": 14,
+      "price": 115.00,
+      "capacity": 500,
+      "sold": 460,
+      "sell_through_pct": 92.0,
+      "date": "2026-01-31"
+    },
+    {
+      "event_id": "EVT-HIST-002",
+      "section": "lower-bowl",
+      "event_type": "concert",
+      "days_before_event": 45,
+      "price": 75.00,
+      "capacity": 3000,
+      "sold": 2100,
+      "sell_through_pct": 70.0,
+      "date": "2025-12-01"
+    },
+    {
+      "event_id": "EVT-HIST-002",
+      "section": "lower-bowl",
+      "event_type": "concert",
+      "days_before_event": 7,
+      "price": 90.00,
+      "capacity": 3000,
+      "sold": 2700,
+      "sell_through_pct": 90.0,
+      "date": "2025-12-22"
+    }
+  ]
+}

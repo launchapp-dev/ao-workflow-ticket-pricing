@@ -1,0 +1,195 @@
+phases:
+  # === price-monitor workflow phases ===
+
+  collect-sales-data:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/collect-sales.sh"]
+      cwd_mode: project_root
+      timeout_secs: 60
+
+  analyze-demand:
+    mode: agent
+    agent: demand-monitor
+    directive: |
+      Analyze the latest ticket sales data and classify demand signals for all event sections.
+
+      Steps:
+      1. Read data/sales/latest.json — the output from the collect-sales-data phase
+      2. Read config/events.yaml to get event details (capacity per section, event datetime)
+      3. Calculate sales velocity, inventory pressure, and urgency multiplier for each section
+      4. Classify each section: cold, warming, hot, or sold-out
+      5. Write demand signals to data/sales/demand-signals.json
+      6. Emit decision contract with overall demand verdict
+
+      The overall verdict determines the next phase:
+      - cold: proceed to scrape competitors (to find if lower prices elsewhere are causing cold demand)
+      - warming: scrape competitors and optimize
+      - hot: optimize immediately (competitors less critical)
+      - sold-out: skip — no pricing action needed
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    decision_contract:
+      required_fields: [verdict, sections_hot, sections_cold, reasoning]
+
+  scrape-competitor-prices:
+    mode: agent
+    agent: competitor-scraper
+    directive: |
+      Scrape current ticket prices from competitor events listed in config/competitor-events.yaml.
+
+      For each competitor event:
+      1. Use Playwright to load the ticketing page
+      2. Extract prices by tier and availability signals
+      3. Record any active promotions or urgency messaging
+
+      Write results to data/competitors/latest.json.
+
+      Be thorough — this data directly informs our pricing strategy.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+
+  model-elasticity:
+    mode: agent
+    agent: elasticity-modeler
+    directive: |
+      Compute demand elasticity coefficients for each event section using historical data.
+
+      Steps:
+      1. Read data/sales/history.json — 90 days of price/sell-through pairs
+      2. Group by section, event type, and days-before-event bucket
+      3. Fit demand curves and compute elasticity per group
+      4. Apply seasonality adjustments from config/seasonality.yaml
+      5. Flag low-confidence sections (< 5 data points)
+
+      Write elasticity results to data/pricing/elasticity.json.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+
+  optimize-prices:
+    mode: agent
+    agent: price-optimizer
+    directive: |
+      Generate price recommendations for all event sections.
+
+      Synthesize:
+      - data/sales/demand-signals.json (demand classification)
+      - data/pricing/elasticity.json (elasticity and price bounds)
+      - data/competitors/latest.json (competitor benchmarks)
+      - config/pricing-rules.yaml (floor, ceiling, max change %)
+
+      Apply the optimization algorithm per section and emit recommendations.
+
+      Check flash-sale trigger conditions first:
+      - If any section has > 40% unsold AND event is < 6 hours away: verdict = flash-sale
+
+      Write recommendations to data/pricing/recommendations.json.
+      Emit decision contract with overall action verdict.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+    decision_contract:
+      required_fields: [verdict, sections_changed, max_change_pct, reasoning]
+
+  simulate-revenue:
+    mode: agent
+    agent: revenue-simulator
+    directive: |
+      Simulate the revenue impact of proposed price changes before applying them.
+
+      1. Read data/pricing/recommendations.json
+      2. Run optimistic/base/pessimistic revenue projections for each section
+      3. Flag high-risk recommendations (> 20% change or low elasticity confidence)
+      4. Write simulations to data/simulations/latest.json
+
+      If total base revenue delta is negative (i.e., price changes are projected to LOSE revenue),
+      flag all recommendations for manual review in the report.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+
+  apply-price-changes:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/apply-prices.sh"]
+      cwd_mode: project_root
+      timeout_secs: 60
+
+  generate-pricing-report:
+    mode: agent
+    agent: pricing-reporter
+    directive: |
+      Generate the hourly pricing update report for this monitoring cycle.
+
+      Read:
+      - data/pricing/recommendations.json
+      - data/simulations/latest.json
+      - data/competitors/latest.json
+      - data/sales/demand-signals.json
+      - config/events.yaml for event name
+
+      Write report to output/pricing/{event_id}/{timestamp}.md where timestamp is current UTC.
+      Include all sections: demand overview, recommendations table, revenue simulation,
+      competitor benchmarks, sell-through projections, and risk flags.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+
+  # === daily-market-scan workflow phases ===
+
+  collect-daily-market:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/collect-daily.sh"]
+      cwd_mode: project_root
+      timeout_secs: 120
+
+  generate-daily-report:
+    mode: agent
+    agent: pricing-reporter
+    directive: |
+      Generate the daily market scan report summarizing all pricing activity from today.
+
+      1. Read all hourly pricing reports from output/pricing/ (today's date)
+      2. Summarize: total price changes made, sections increased/decreased/flash-sold
+      3. Net revenue impact: compare morning baseline vs. end-of-day projections
+      4. Competitor price movements: how did competitors change prices throughout the day?
+      5. Sell-through progress: which sections improved, which are still cold?
+
+      Write daily summary to output/daily/{YYYY-MM-DD}.md.
+    capabilities:
+      mutates_state: true
+      writes_files: true
+
+  # === weekly-revenue-review workflow phases ===
+
+  aggregate-weekly-data:
+    mode: command
+    command:
+      program: bash
+      args: ["-c", "bash scripts/aggregate-weekly.sh"]
+      cwd_mode: project_root
+      timeout_secs: 180
+
+  generate-weekly-review:
+    mode: agent
+    agent: pricing-reporter
+    directive: |
+      Generate the weekly revenue review report.
+
+      1. Read all daily reports from output/daily/ for the past 7 days
+      2. Compute week-over-week metrics: revenue, sell-through %, average price per section
+      3. Pricing effectiveness: for each price change made, did demand respond as elasticity predicted?
+      4. Competitor intelligence: weekly summary of competitor pricing strategies
+      5. Recommendations for next week: which events need pricing strategy adjustments?
+
+      Write weekly review to output/weekly/{YYYY-MM-DD}.md (Monday's date).
+    capabilities:
+      mutates_state: true
+      writes_files: true

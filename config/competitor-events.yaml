@@ -1,0 +1,20 @@
+# Competitor events to monitor for price benchmarking
+# Playwright will scrape these pages
+competitor_events:
+  - id: COMP-001
+    event_name: "Rival Band Concert — Similar Venue"
+    url: "https://www.ticketmaster.com/event/example-001"
+    comparable_to: EVT-001
+    notes: "Same venue, similar artist draw — closest competitor"
+
+  - id: COMP-002
+    event_name: "Alt Rock Night — Barclays Center"
+    url: "https://www.ticketmaster.com/event/example-002"
+    comparable_to: EVT-001
+    notes: "Same night, different venue — audience overlap"
+
+  - id: COMP-003
+    event_name: "NY Knicks vs. LA Lakers"
+    url: "https://www.ticketmaster.com/event/example-003"
+    comparable_to: EVT-002
+    notes: "Same night NBA game — competing for sports fans"

@@ -1,0 +1,15 @@
+schedules:
+  - id: price-monitor-hourly
+    cron: "0 * * * *"
+    workflow_ref: price-monitor
+    enabled: true
+
+  - id: daily-market-scan
+    cron: "0 7 * * *"
+    workflow_ref: daily-market-scan
+    enabled: true
+
+  - id: weekly-revenue-review
+    cron: "0 9 * * 1"
+    workflow_ref: weekly-revenue-review
+    enabled: true

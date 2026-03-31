@@ -1,0 +1,34 @@
+# Events being actively managed
+events:
+  - id: EVT-001
+    name: "The Midnight Sons — Arena Tour"
+    venue: "Madison Square Garden"
+    event_datetime: "2026-04-15T20:00:00-05:00"
+    sections:
+      - name: floor
+        capacity: 500
+        current_price: 125.00
+      - name: lower-bowl
+        capacity: 3000
+        current_price: 85.00
+      - name: upper-bowl
+        capacity: 5000
+        current_price: 45.00
+      - name: vip-package
+        capacity: 100
+        current_price: 350.00
+
+  - id: EVT-002
+    name: "Brooklyn Nets vs. Boston Celtics"
+    venue: "Barclays Center"
+    event_datetime: "2026-04-02T19:30:00-05:00"
+    sections:
+      - name: courtside
+        capacity: 80
+        current_price: 800.00
+      - name: lower-level
+        capacity: 2500
+        current_price: 150.00
+      - name: upper-level
+        capacity: 6000
+        current_price: 55.00
